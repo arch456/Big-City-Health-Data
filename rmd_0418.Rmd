@@ -1,0 +1,41 @@
+---
+title: "Untitled"
+author: "Archana Chittoor"
+date: "4/18/2020"
+output: word_document
+---
+```{r}
+
+```
+
+
+```{r}
+require(dplyr)
+
+health.data = read.csv("Big_Cities_Health_Data_Inventory.csv")
+
+# Drinking data for Students
+drink.st <- health.data %>%
+ filter(Indicator == "Percent of High School Students Who Binge Drank") 
+
+# Smoking data for Students
+smoke.st <- health.data %>%
+ filter(Indicator == "Percent of High School Students Who Currently Smoke")
+
+# Drinking data for Adults
+drink.ad <- health.data %>%
+  filter(Indicator == "Percent of Adults Who Binge Drank")
+
+# Smoking data for Adults
+smoke.ad <- health.data %>%
+  filter(Indicator == "Percent of Adults Who Currently Smoke")
+
+```
+
+
+```{r}
+drink.st <- drink.st[c(3:7)]
+drink.st$Race <- drink.st$Race..Ethnicity
+drink.st <- drink.st[-c(3)]
+```
+

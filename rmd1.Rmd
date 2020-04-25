@@ -1,0 +1,78 @@
+---
+title: "Untitled"
+author: "Archana Chittoor"
+date: "3/20/2020"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+require(dplyr)
+
+health.data = read.csv("Big_Cities_Health_Data_Inventory.csv")
+
+summary (health.data)
+attach(health.data)
+
+drink.st <- health.data %>%
+  filter(Indicator == "Percent of High School Students Who Binge Drank")
+
+drink.st <- drink.st[c(3:7)]
+pairs(drink.st)
+#pairs(drink.st, col = drink.st$Value)
+
+lm.fitg=lm(Value~Gender,data=drink.st) 
+summary(lm.fitg)
+
+par(mfrow = c(2, 2))
+plot(lm.fitg)
+
+summary(drink.st$Value)
+hist(drink.st$Value)
+
+lm.fitall=lm(Value~.,data=drink.st) 
+summary(lm.fitall)
+
+par(mfrow = c(2, 2))
+plot(lm.fitall)
+
+drink.ad <- health.data %>%
+  filter(Indicator == "Percent of Adults Who Binge Drank")
+
+drink.ad <- drink.ad[c(3:7)]
+pairs(drink.ad)
+#pairs(drink.st, col = drink.st$Value)
+
+summary(drink.ad$Value)
+hist(drink.ad$Value)
+
+lm.fitall=lm(Value~.,data=drink.ad) 
+summary(lm.fitall)
+
+par(mfrow = c(2, 2))
+plot(lm.fitall)
+
+```
+```{r}
+library(MASS)
+require(dplyr)
+
+health.data = read.csv("Big_Cities_Health_Data_Inventory.csv")
+attach(health.data)
+drink.st <- health.data %>%
+  filter(Indicator == "Percent of High School Students Who Binge Drank")
+logistic = glm(Indicator.Category ~ Gender+Value+Place, data = drink.st,family = "binomial")
+summary(logistic)
+
+
+ldafit = lda(Race..Ethnicity ~ Value, data = drink.st)
+ldafit
+ldafit = lda(Race..Ethnicity ~ Gender, data = drink.st)
+ldafit
+ldapred = predict(ldafit,drink.st)
+ldaclass = ldapred$class
+table(ldaclass, drink.st$Race..Ethnicity)
+```
+

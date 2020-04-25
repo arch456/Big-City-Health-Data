@@ -1,0 +1,1121 @@
+---
+title: "Analysis of Big City Smoking and Drinking Data among Students and Adults"
+authors: "Aman Negassi, Anusha Singamaneni, Archana Chittoor"
+date: "4/20/2020"
+output: word_document
+---
+
+## Team: 
+### Aman Negassi, Data Science, aman_negassi@my.uri.edu
+### Anusha Singamaneni, Computer Science, anushasa10@my.uri.edu
+### Archana Chittoor, Computer Science, achittoor@my.uri.edu
+
+# 1. Executive Summary
+
+This project aims to utilize statistical methods such as Linear Regression and Decision Trees, to analyze the major factors that influence smoking and drinking issues among high school students as well as adults in the most populated urban cities of the United States.  The dataset being used is Big Cities Health data [1] which contains health status of twenty-eight of the nation’s largest and most urban cities, as captured by 34 health (and six demographics-related) indicators. Each city is rich with its own culture  and history and we are considering the demographics of the subjects that  are disproportionately scattered among the cities.   
+
+**Questions of Interest**
+ The main objective of the project is to address the following questions:
+   
+* i) What are the major factors causing smoking and drinking problems among High School students in the most urban cities of the United States? How much are these conditions influenced by the place, ethnicity, and gender of the students? 
+  
+* ii) Similarly, how much effect do predictors like place, gender and ethnicity have on smoking and drinking problems among adults in US’s biggest cities?  
+    
+These questions have been chosen as the basis of research because  smoking and binge drinking are major issues of concern especially among  young students, and lead to dropouts, termination and such outcomes.  Therefore, if analysis can be performed to identify influencing factors, the result can be utilized to curb such problems to an extent. The intention is to  conduct statistical analysis and inference using appropriate methods to  isolate any underlying factors and help regulate these societal problems from the core. 
+ 
+# 2. Descriptive Statistics and Graphical Summaries
+
+## Loading Data
+
+```{r echo=TRUE}
+require(dplyr)
+# Load the dataset and run summary()
+health.data = read.csv("Big_Cities_Health_Data_Inventory.csv")
+summary (health.data)
+```
+
+## Data Extraction
+
+We first extract the **Drinking and Smoking data** for high school students by applying the filters with Indicator as "Percent of High School Students Who Binge Drank" and "Percent of High School Students Who Currently Smoke" respectively. This gives us two datasets drink.st and smoke.st. Once the data is extracted, we will retain only the variables of interest and eliminate the others, for further analysis. Additionally, we also rename the column Race..Ethnicity to Ethnicity because it is not recommended to have special symbols in column names. Also, we would need to  remove rows with missing values as they generate errors during analysis.
+
+
+## Extracting and Refining Students data  
+
+```{r echo=TRUE}
+require(dplyr)
+
+# Drinking data for High School Students
+drink.st <- health.data %>%
+  filter(Indicator == "Percent of High School Students Who Binge Drank")
+
+# Smoking data for Students
+smoke.st <- health.data %>%
+ filter(Indicator == "Percent of High School Students Who Currently Smoke")
+
+# Remove unwanted variables and rename some columns
+
+drink.st <- drink.st[c(3:7)]
+drink.st$Ethnicity <- drink.st$Race..Ethnicity
+drink.st <- drink.st[-c(3)]
+
+smoke.st <- smoke.st[c(3:7)]
+smoke.st$Ethnicity <- smoke.st$Race..Ethnicity
+smoke.st <- smoke.st[-c(3)]
+
+```
+
+## Extracting and Refining Adults' data  
+
+Similarly, we extract the **Drinking and Smoking data** for Adults by applying the filters with Indicator as "Percent of Adults Who Binge Drank" and "Percent of Adults Who Currently Smoke" respectively. This gives us the two datasets drink.ad and smoke.ad. Just like we did for Students data, we eliminate the unwanted columns, which are not required as part of our analysis. Similarly, columns are renamed and missing values are eliminated. 
+
+
+```{r echo=TRUE}
+# Drinking data for Adults
+drink.ad <- health.data %>%
+  filter(Indicator == "Percent of Adults Who Binge Drank")
+
+# Smoking data for Adults
+smoke.ad <- health.data %>%
+  filter(Indicator == "Percent of Adults Who Currently Smoke")
+
+# Remove unwanted variables and rename some columns
+drink.ad <- drink.ad[c(3:7)]
+drink.ad$Ethnicity <- drink.ad$Race..Ethnicity
+drink.ad <- drink.ad[-c(3)]
+
+smoke.ad <- smoke.ad[c(3:7)]
+smoke.ad$Ethnicity <- smoke.ad$Race..Ethnicity
+smoke.ad <- smoke.ad[-c(3)]
+
+```
+
+We found some missing values and these need to eliminted before proceeding with the analysis.
+
+```{r}
+
+# Remove missing data which has been found only in smoke.ad dataset
+drink.st <- drink.st %>%
+  filter(Value != "NA")
+smoke.st <- smoke.st %>%
+  filter(Value != "NA")
+drink.ad <- drink.ad %>%
+  filter(Value != "NA")
+smoke.ad <- smoke.ad %>%
+  filter(Value != "NA")
+```
+
+The above four datasets which have been generated based on our Questions of Interest will be used to perform the analysis.
+  
+```{r}
+
+# Drinking data for Students
+mean(drink.st$Value) # The average is 14.85%
+
+median(drink.st$Value) # The median value is 12.7
+
+sd(drink.st$Value) # The standard deviation is 9.09
+
+hist(drink.st$Value) #Based on the graph, it seems to be often 40 drinks high school students binge on.
+
+barplot(drink.st$Value)
+
+#pie(drink.st$Value, cex = 0.5)
+
+# Smoking data for Students
+
+mean(smoke.st$Value) # The average is 10.89 %
+
+median(smoke.st$Value) # The middle value is 10
+
+sd(smoke.st$Value) # The standard deviation is 4.69
+
+hist(smoke.st$Value) # Based on the histogram, it seems that the students who currently smoke do smoke more than 60 cigarettes often.
+
+barplot(smoke.st$Value)
+
+#pie(smoke.st$Value, cex = 0.5)
+
+# Drinking data for Adults
+
+mean(drink.ad$Value) #The average was 21.81%
+
+median(drink.ad$Value) # The middle value is 19.7
+
+sd(drink.ad$Value) # The standard deviation is 10.75
+
+hist(drink.ad$Value) #Shown from the histogram, the adults frequently consume more than 120 drinks.
+barplot(drink.ad$Value) 
+
+#pie(drink.ad$Value, cex = 0.5)
+
+# Smoking data for Adults
+
+mean(smoke.ad$Value) # The average was 17.61%
+
+median(smoke.ad$Value) # The median value is 17.4
+
+sd(smoke.ad$Value) # The standard deviation is 5.53
+
+hist(smoke.ad$Value) # Adults smoke frequently more than 80 cigarettes.
+
+barplot(smoke.ad$Value) 
+
+#pie(smoke.ad$Value, cex = 0.8)
+
+```
+
+**Observations:**
+
+Looking at the bar plots, pie charts and histograms of our four datasets, we can make the following important and relevant observations:
+
+* More often than not, high school students seem to be binging on as many as 40 drinks and smoking more than 60 cigarettes, which is quite high.
+* Coming to the adults with smoking and drinking problems, they seem to be frequently consuming more than 120 drinks and smoking more than 80 cigarettes.
+* On average, problems with binge drinking and smoking seem to be more prevalent among adults than high school students.
+
+
+
+# 3. Detailed Data Analysis
+
+## i) Linear Regression
+
+The first type of analysis we are performing on our data set is linear Regression. We have chosen the linear Regression as our method of data analysis because , it models the relationships between a response variable and one or more predictor variables. It also shows how changes in the predictor values are associated with changes in the response mean. You can also use regression to make predictions based on the values of the predictors.Here we are using Response as Value and Gender,Year, Ethnicity, Place as predictors and left all the remaining Variables for future analysis.
+
+### Response (variable of interest) with the type and units:
+
+For all four data sets that we work on, **Value** is the response or variable of interest. It is a Numerical (or quantitative) variable. It has no units but rather it is a numerical indicator about a particular health condition that we are interested in. 
+    
+### Explanatory/grouping variable(s) with the type and units:
+
+The explanatory variables for the four datasets (drink.st, smoke.st, drink.ad and smoke.ad) are:  
+
+* Year (type: Date)
+  
+* Gender (Factor with 3 levels - Male, Female, Both)
+  
+* Ethnicity (Factor with 9 levels such as Native American, Asian/PI and so on )
+  
+* Place (Factor with 29 levels)
+
+We will not use the other columns like Indicator. Category, Indicator, BCBH.Requested.Methodology, Source , Methods and Notes in the data as they do not add any value and we obtain no new relationships or dependencies when these are taken into account.
+
+### How linear Regression applies for our analysis:
+To address our question of interest , we need to find relationships/ dependencies between our response **Value** and the predictors given by **Place, Gender, Year and Ethnicity**. As the response is numerical, it makes sense to use linear regression to examine our data.
+
+### Limitations :
+
+The major limitation on our dataset is that it is prone to outliers and leverage points. We can see them in almost every dataset (4 datasets). So, outliers and leverage points should be analyzed and removed before applying Linear Regression to the dataset.  
+
+However Linear Regression performs well when the dataset is linearly separable, and is easier to implement, interpret and very efficient to train.
+  
+We first fit a simple linear regression model on students data , who currently drink and smoke, between dependent variable "Value"  and explanatory variable "Gender".
+
+
+```{r echo=TRUE}
+# Fit linear regression with Gender as predictor and Value as response
+# Students data who Drink
+lm.fitg=lm(Value~Gender,data=drink.st) 
+summary(lm.fitg)
+
+par(mfrow = c(2, 2))
+plot(lm.fitg)
+
+# High School students who smoke
+lm.fitg=lm(Value~Gender,data=smoke.st)
+summary(lm.fitg)
+
+par(mfrow = c(2, 2))
+plot(lm.fitg)
+```
+
+### Interpretation:
+
+In Simple linear Regression model for students, drink data and smoke data , it shows Gender is not statistically significant , as it results in very high p-Value, and a negative intercept (beta1)
+
+So, there is not much effect of Gender in causing the high school students to smoke and Drink.
+
+
+### Multiple Linear Regression
+
+Using Ethnicity , Place and Gender as Independent Variables on High school students drink data.
+
+
+```{r echo=TRUE}
+# Drink data
+
+lm.fit=lm(Value~.,data=drink.st) 
+summary(lm.fit)
+par(mfrow = c(2, 2))
+plot(lm.fit)
+
+HighLeverage <- cooks.distance(lm.fit) > (4/nrow(drink.st))
+
+drink.st <- drink.st[!HighLeverage,]
+lm.fit=lm(Value~.,data=drink.st) 
+summary(lm.fit)
+par(mfrow = c(2, 2))
+plot(lm.fit)
+
+
+```
+
+
+### Interpretation
+
+After performing a multiple fit , we can assume that **Ethnicity and Place** are statistically significant predictors for  Value. These are the most influencing fators that causes drinking  among the High school students 
+  
+  Approximately 93 % of variation in value variable can be explained by this model with these two independent variables (Place and Ethnicity). Very low P-value also strenghtens this assumption.  
+  
+The residual standard error also shows there is not much distance between our observed value(Y) from the predicted Value(Yhat).
+  We can see from the plots that there exist leverage points , so removed all those as they are not much influential, and run the model again to show best fit.
+
+
+### Performing Multiple regression on High school students Smoke data.
+
+```{r echo=TRUE}
+
+#Smoke Data
+
+lm.fitall=lm(Value~.,data=smoke.st) 
+summary(lm.fitall)
+par(mfrow = c(2, 2))
+plot(lm.fitall)
+
+HighLeverage <- cooks.distance(lm.fitall) > (4/nrow(smoke.st))
+
+smoke.st <- smoke.st[!HighLeverage,]
+lm.fitall=lm(Value~.,data=smoke.st) 
+summary(lm.fitall)
+par(mfrow = c(2, 2))
+plot(lm.fitall)
+
+
+```
+
+### Interpretation
+
+Multiple fit for students smoke data shows that Place and Ethnicity are most influencing factors that caused smoking among High school students, Approximately 89% of variation in value can be explained  by this model, and has a very low P-value, And the residual error is 3.34 on 238 degrees of freedom tell us that there is no bigger distance between observed value(Y) and predicted value(Yhat), which shows this is statistically significant. 
+  It can be seen from the plots that there are few leverage points , which doesnt seem to have any effect on our model , so removed them and ran the fit again.
+
+
+### Multiple Regression analysis on Adults drinking data
+
+```{r echo=TRUE}
+# Similarly run the fit on Adults data
+lm.fitAd=lm(Value~Gender,data=drink.ad) 
+summary(lm.fitAd)
+
+lm.fitAd=lm(Value~.,data=drink.ad) 
+summary(lm.fitAd)
+par(mfrow = c(2, 2))
+plot(lm.fitAd)
+
+
+HighLeverage <- cooks.distance(lm.fitAd) > (4/nrow(drink.ad))
+
+drink.ad <- drink.ad[!HighLeverage,]
+lm.fitAd=lm(Value~.,data=drink.ad) 
+summary(lm.fitAd)
+par(mfrow = c(2, 2))
+plot(lm.fitAd)
+
+
+```
+
+
+### Interpretation
+
+From the simple regression fit, we can understand that Drinking is more among male adults than in female.
+  This fit shows us that all the predictors are significant for the response Value. But Year and Gender are best predictors of all four. Residual standared error show there is not much difference between observed and predicted value. Approximately 88% of variance can be explained using this model, and  the p-vaue is very low, stating that this  model is statistically significant.
+  Leverage points are removed and re-run the fit again , to get a best fit.
+
+
+### Multiple Regression analysis on Adults smoking data
+
+```{r echo=TRUE}
+#Adults who smoke
+lm.fitall=lm(Value~.,data=smoke.ad) 
+summary(lm.fitall)
+par(mfrow = c(2, 2))
+plot(lm.fitall)
+
+HighLeverage <- cooks.distance(lm.fitall) > (4/nrow(smoke.ad))
+
+smoke.ad <- smoke.ad[!HighLeverage,]
+lm.fitall=lm(Value~.,data=smoke.ad) 
+summary(lm.fitall)
+par(mfrow = c(2, 2))
+plot(lm.fitall)
+```
+
+### Interpretation
+
+This fit shows that Place and Ethnicity are most influential factors in causing smoking among Adults. The residual error with 2.801 on 193 degrees of freedom show there is no significant difference between the observed and predicted value. This model explains approximately shows 76% of variance and it has a very low P-value. So, this model is statistically significant.
+
+  Leverage points removed and re-run the fit again as there is no influence of these points in our data.
+
+### Conclusion:
+
+After analysis on all four data sets , we can say that **Place is the most significant factor followed by Ethnicity**. These are the major influencing factors causing drinking and smoking among High school students.
+
+
+## ii) Regression Tree
+
+The second type of analysis we perform on our data is Decision Tree analysis. 
+We have chosen the Regression tree as our method of data analysis because our response Value is numerical (quantitative). 
+  
+The Regression tree has advantages over other Regression models. It is easier to interpret and has a good graphical representation. Our intention is to investigate the relationship between the response Value and the predictors Gender, Ethnicity, Value and Place by using Decision Trees. We will also implement Bagging, Boosting and Random Forests, selecting the best method that produces the minimum Mean Squared Error (MSE). In addition, we will compare and analyse the importance of each of our predictor variables in relationship to the Value indicator.
+ 
+
+### Response (variable of interest) with the type and units:
+
+For all four data sets that we work on, **Value** is the response or variable of interest. It is a Numerical (or quantitative) variable. It has no units but rather a numerical indicator about a particular health condition that we are interested in. 
+    
+### Explanatory/grouping variable(s) with the type and units:
+
+The explanatory variables for the four datasets (drink.st, smoke.st, drink.ad and smoke.ad) are:  
+* Year (type: Date)
+* Gender (Factor with 3 levels - Male, Female, Both)
+* Ethnicity (Factor with 9 levels such as Native American, Asian/PI and so on )
+* Place (Factor with 29 levels)
+  
+We will not use the other columns like Indicator. Category, Indicator, BCBH.Requested.Methodology, Source , Methods and Notes in the data as they do not add any value and we obtain no new relationships or dependencies when these are taken into account.
+
+### How Regression Trees apply to our analysis:
+
+We use Regression trees to investigate the relationships in our data as per the below questions of interest:
+
+* i) What are the major factors causing smoking and drinking problems among High School students in the most urban cities of the United States? How much are these conditions influenced by the place, ethnicity, and gender of the students? 
+
+* ii) Similarly, how much effect do predictors like place, gender and ethnicity have on smoking and drinking problems among adults in US’s biggest cities?
+
+To address the above questions, we need to find relationships/ dependencies between our response **Value** and the predictors given by **Place, Gender, Year and Ethnicity**. As the response is numerical, it makes sense to use Regression trees to generate trees that examine our data. We will implement Bagging, Random Forest and Boosting to reduce the Mean Squared Error. Furthermore, we can determine which of the variables are the most important, and list them down according to their significance. 
+
+**Limitations of using Regression Trees on our data:**
+We are limited by the number of variables which is four. Due to this, Random Forest would be same as Bagging because we need to use all four variables in both, and anything less than that will not give us relevant outputs. 
+  
+However, Regression trees prove useful for analyzing the data when the response is numerical as mentioned above. They provide an easy interpretation and a good graphical representation as well.
+
+
+### Regression Tree Analysis
+
+  
+```{r}
+require(dplyr)
+
+# Drinking data for High School Students
+drink.st <- health.data %>%
+  filter(Indicator == "Percent of High School Students Who Binge Drank")
+
+# Smoking data for Students
+smoke.st <- health.data %>%
+ filter(Indicator == "Percent of High School Students Who Currently Smoke")
+
+# Remove unwanted variables and rename some columns
+
+drink.st <- drink.st[c(3:7)]
+drink.st$Ethnicity <- drink.st$Race..Ethnicity
+drink.st <- drink.st[-c(3)]
+
+smoke.st <- smoke.st[c(3:7)]
+smoke.st$Ethnicity <- smoke.st$Race..Ethnicity
+smoke.st <- smoke.st[-c(3)]
+
+
+```
+  
+
+### Extracting and Refining Adults' data  
+
+```{r}
+
+# Drinking data for Adults
+drink.ad <- health.data %>%
+  filter(Indicator == "Percent of Adults Who Binge Drank")
+
+# Smoking data for Adults
+smoke.ad <- health.data %>%
+  filter(Indicator == "Percent of Adults Who Currently Smoke")
+
+# Remove unwanted variables and rename some columns
+drink.ad <- drink.ad[c(3:7)]
+drink.ad$Ethnicity <- drink.ad$Race..Ethnicity
+drink.ad <- drink.ad[-c(3)]
+
+smoke.ad <- smoke.ad[c(3:7)]
+smoke.ad$Ethnicity <- smoke.ad$Race..Ethnicity
+smoke.ad <- smoke.ad[-c(3)]
+
+# Remove missing data which has been found only in smoke.ad dataset
+smoke.ad <- smoke.ad %>%
+  filter(Value != "NA")
+```
+  
+#### Basic Regression Trees
+
+We first create basic Regression trees for each of our four datasets **drink.st, smoke.st, drink.ad and smoke.ad**.
+
+#### a) Drinking data for Students
+
+
+```{r}
+require(tree)
+
+set.seed(1) 
+
+## Create the Training dataset
+
+train = sample(1:nrow(drink.st), nrow(drink.st)/2)
+tree.drink.st=tree(Value~.,drink.st,subset=train)
+summary(tree.drink.st)
+
+```
+  
+```{r}
+plot(tree.drink.st)
+text(tree.drink.st,pretty=0, cex = 0.6)
+tree.drink.st
+```
+
+
+```{r}
+require(tree)
+
+set.seed(1) 
+
+## Create the Training dataset
+
+train = sample(1:nrow(drink.st), nrow(drink.st)/2)
+tree.drink.st=tree(Value~.,drink.st,subset=train)
+summary(tree.drink.st)
+
+```
+  
+```{r}
+plot(tree.drink.st)
+text(tree.drink.st,pretty=0, cex = 0.6)
+tree.drink.st
+```
+
+We will prune the tree now.  
+
+##### Pruning:
+
+```{r}
+cv.drink.st=cv.tree(tree.drink.st)
+plot(cv.drink.st$size,cv.drink.st$dev,type='b') 
+
+```
+
+```{r}
+prune.drink.st=prune.tree(tree.drink.st,best=5) 
+plot(prune.drink.st) 
+text(prune.drink.st,pretty=0, cex = 0.6) 
+prune.drink.st
+```
+
+**Interpretation:**
+
+The tree after pruning to 5 terminal nodes seems to be easier to interpret and has a better graphical representation. The best predictor seems to be Place because it is used for the initial split, where the Place is Baltimore, Los Angeles, San Diego on one side and all other cities (25 cities) are on the other side. Ethnicity is the next best predictor used and the tree is split depending on it being Asian/PI, Black, Hispanic, Multiracial on one side and all other ethnicities on the other side. The tree() function has used only Place and Ethnicity for building the Regression tree. In addition, we can see that the predictions have higher values on the left sub-tree as compared to the other side, which is as expected.
+
+
+##### Making Predictions on test data:
+
+```{r}
+yhat=predict(tree.drink.st,newdata=drink.st[-train,]) 
+drink.st.test = drink.st[-train,"Value"] 
+plot(yhat,drink.st.test)
+abline(0,1)
+```
+
+##### Mean Squared Error
+
+```{r}
+
+mean((yhat-drink.st.test)^2) 
+
+```
+
+The error rate is quite high and we need to implement Bagging, Random Forest or Boosting to reduce the error and see if we can obtain a better fit.
+
+##### Bagging
+```{r}
+
+require(randomForest)
+set.seed(1) 
+bag.drink.st=randomForest(Value~.,data=drink.st,subset=train,mtry=4,ntree = 500, importance=TRUE) 
+bag.drink.st
+
+yhat.bag = predict(bag.drink.st,newdata=drink.st[-train,]) 
+plot(yhat.bag, drink.st.test) 
+abline(0,1) 
+
+mean((yhat.bag-drink.st.test)^2) 
+
+```
+
+Bagging reduces the error rate significantly and it is computed as 14.59.
+
+##### Random Forest:
+
+```{r}
+set.seed(1) 
+rf.drink.st=randomForest(Value~.,data=drink.st,subset=train,mtry=4,importance=TRUE ) 
+yhat.rf = predict(rf.drink.st,newdata=drink.st[-train,]) 
+mean((yhat.rf-drink.st.test)^2) 
+
+```
+
+Random Forest gives the same MSE as Bagging because both are equivalent in this case ( due to same value of mtry).
+
+
+##### Boosting
+
+```{r}
+require(gbm)
+set.seed(1)
+boost.drink.st=gbm(Value~.,data=drink.st[train,],distribution="gaussian",n.trees=5000,interaction.depth=4)
+
+summary(boost.drink.st)
+```
+
+
+Place and Ethnicity are the most important variables as seen above. We can also produce partial dependence plots for these two variables. The plots below show marginal effect of selected variables on the response. 
+
+```{r}
+par(mfrow=c(1,2)) 
+plot(boost.drink.st,i="Place", type = "l") 
+plot(boost.drink.st,i="Ethnicity", type = "l")
+
+yhat.boost=predict(boost.drink.st,newdata=drink.st[-train,],n.trees=5000) 
+mean((yhat.boost-drink.st.test)^2) 
+
+boost.drink.st=gbm(Value~.,data=drink.st[train,],distribution="gaussian",n.trees=5000,interaction.depth=4,shrinkage=0.2,verbose=F) 
+yhat.boost=predict(boost.drink.st,newdata=drink.st[-train,],n.trees=5000) 
+mean((yhat.boost-drink.st.test)^2) 
+
+```
+
+The MSE when we perform Boosting is more than that of Bagging, 23.07 when we use default Shrinkage Parameter and 40.94 when the Shrinkage Parameter is increased to 0.2 .
+
+Therefore, we choose Regression Tree with Bagging as the best model as it generates the least MSE.
+
+##### Importance of Variables:
+
+```{r}
+importance(bag.drink.st)
+varImpPlot(bag.drink.st) 
+```
+
+**Conclusion:**
+  
+As seen above the most important predictor is **Place** and the next best predictor is **Ethnicity**.  
+On average, when we examine the plots generated after Boosting, we find that the cities **Miami, Florida and San Antonio, TX** have the highest problem of Binge Drinking among High School students. Cities such as **Los Angeles, CA and	San Diego County, CA** have the least indicator values leading to the inference that these cities seem to have least binge drinking problems among students.  
+When it comes to ethnicities, we find that White community has the highest drinking rate among students and Black, Asian/PI have the lowest rates.
+
+
+#### ii) Smoking data for Students   
+  
+```{r}
+set.seed(1) 
+
+## Create the Training dataset
+
+train = sample(1:nrow(smoke.st), nrow(smoke.st)/2)
+tree.smoke.st=tree(Value~.,smoke.st,subset=train)
+summary(tree.smoke.st)
+
+```
+  
+```{r}
+plot(tree.smoke.st)
+text(tree.smoke.st,pretty=0, cex = 0.6)
+tree.smoke.st
+
+```
+
+
+We will perform Pruning on the tree now.  
+
+##### Pruning:
+
+```{r}
+cv.smoke.st=cv.tree(tree.smoke.st)
+plot(cv.smoke.st$size,cv.smoke.st$dev,type='b') 
+
+```
+
+```{r}
+prune.smoke.st=prune.tree(tree.smoke.st,best=7) 
+plot(prune.smoke.st) 
+text(prune.smoke.st,pretty=0, cex = 0.6) 
+prune.smoke.st
+```
+
+**Interpretation:**
+
+The tree after pruning to 7 terminal nodes seems to be easier to interpret and has a better graphical representation. The best predictor seems to be Ethnicity in this case because it is used for the initial split, where the Place is Asian/PI, lack on one side on one side and all other ethnicities are on the other side. Place seems to be the next best predictor used and the tree is split with Miami, New York, San Francisco on the higher side and all others on the other lower side. The Year is also used to split the data on the left sub-tree. 
+
+
+##### Making Predictions on test data:
+
+```{r}
+yhat=predict(tree.smoke.st,newdata=smoke.st[-train,]) 
+smoke.st.test = smoke.st[-train,"Value"] 
+plot(yhat,smoke.st.test)
+abline(0,1)
+```
+
+##### Mean Squared Error
+
+```{r}
+
+mean((yhat-smoke.st.test)^2) 
+
+```
+
+The error rate is not bad and we can implement Bagging, Random Forest or Boosting to reduce the error and see if we can obtain a better fit.
+
+
+##### Bagging
+```{r}
+
+require(randomForest)
+set.seed(1) 
+bag.smoke.st=randomForest(Value~.,data=smoke.st,subset=train,mtry=4,ntree = 500, importance=TRUE) 
+bag.smoke.st
+
+yhat.bag = predict(bag.smoke.st,newdata=smoke.st[-train,]) 
+plot(yhat.bag, smoke.st.test) 
+abline(0,1) 
+
+mean((yhat.bag-smoke.st.test)^2) 
+
+```
+
+Bagging reduces the error rate significantly and it is computed as 12.81.
+
+##### Random Forest:
+
+```{r}
+set.seed(1) 
+rf.smoke.st=randomForest(Value~.,data=smoke.st,subset=train,mtry=4,importance=TRUE ) 
+yhat.rf = predict(rf.smoke.st,newdata=smoke.st[-train,]) 
+mean((yhat.rf-smoke.st.test)^2) 
+
+```
+
+Random Forest gives the same MSE as Bagging because both are equivalent in this case ( due to same value of mtry).
+
+##### Boosting
+
+```{r}
+require(gbm)
+set.seed(1)
+boost.smoke.st=gbm(Value~.,data=smoke.st[train,],distribution="gaussian",n.trees=5000,interaction.depth=4)
+
+summary(boost.smoke.st)
+```
+
+
+Place and Ethnicity are the most important variables as seen above. We can also produce partial dependence plots for these two variables. The plots below show marginal effect of selected variables on the response. 
+
+```{r}
+par(mfrow=c(1,2)) 
+plot(boost.smoke.st,i="Place", type = "l") 
+plot(boost.smoke.st,i="Ethnicity", type = "l")
+
+yhat.boost=predict(boost.smoke.st,newdata=smoke.st[-train,],n.trees=5000) 
+mean((yhat.boost-smoke.st.test)^2) 
+
+boost.smoke.st=gbm(Value~.,data=smoke.st[train,],distribution="gaussian",n.trees=5000,interaction.depth=4,shrinkage=0.2,verbose=F) 
+yhat.boost=predict(boost.smoke.st,newdata=smoke.st[-train,],n.trees=5000) 
+mean((yhat.boost-smoke.st.test)^2) 
+
+```
+
+The MSE when we perform Boosting is more than that of Bagging, 16.09 when we use default Shrinkage Parameter and 34.99 when the Shrinkage Parameter is increased to 0.2 .
+
+Therefore, we choose Regression Tree with Bagging as the best model as it generates the least MSE.
+
+##### Importance of Variables:
+
+```{r}
+importance(bag.smoke.st)
+varImpPlot(bag.smoke.st) 
+```
+
+As seen above the most important predictor is **Place** and the next best predictor is **Ethnicity**. 
+  
+Also, as seen in the plots generated after Boosting, we find that **Miami and Seattle** have higher smoking rates among high school students whereas the rates are lowest in **Detroit**. Similarly, when it comes to ethnicities, smoking rates are highest in Multiracial section of society and lowest in Black, Asian/PI communities.
+
+
+#### iii) Drinking data for Adults
+
+```{r}
+require(tree)
+
+set.seed(1) 
+
+## Create the Training dataset
+
+train = sample(1:nrow(drink.ad), nrow(drink.ad)/2)
+tree.drink.ad=tree(Value~.,drink.ad,subset=train)
+summary(tree.drink.ad)
+
+```
+  
+  
+```{r}
+plot(tree.drink.ad)
+text(tree.drink.ad,pretty=0, cex = 0.6)
+tree.drink.ad
+```
+
+
+We will prune the tree now.  
+
+##### Pruning:
+
+
+```{r}
+cv.drink.ad=cv.tree(tree.drink.ad)
+plot(cv.drink.ad$size,cv.drink.ad$dev,type='b') 
+
+```
+
+```{r}
+prune.drink.ad=prune.tree(tree.drink.ad,best=8) 
+plot(prune.drink.ad) 
+text(prune.drink.ad,pretty=0, cex = 0.6) 
+prune.drink.ad
+```
+
+**Interpretation:**
+
+The tree after pruning to 8 terminal nodes seems to be easier to interpret and has a better graphical representation. The best predictor seems to be Place followed by ethnicity where Asian/PI, Black are on the lower side. Year also seems to be important as the year 2013 seems to have higher rates of drinking issues among adults.
+
+
+##### Making Predictions on test data:
+
+```{r}
+yhat=predict(tree.drink.ad,newdata=drink.ad[-train,]) 
+drink.ad.test = drink.ad[-train,"Value"] 
+plot(yhat,drink.ad.test)
+abline(0,1)
+```
+
+##### Mean Squared Error
+
+```{r}
+
+mean((yhat-drink.ad.test)^2) 
+
+```
+
+The error rate is quite high and we need to implement Bagging, Random Forest or Boosting to reduce the error and see if we can obtain a better fit.
+
+
+##### Bagging
+```{r}
+
+require(randomForest)
+set.seed(1) 
+bag.drink.ad=randomForest(Value~.,data=drink.ad,subset=train,mtry=4,ntree = 500, importance=TRUE) 
+bag.drink.ad
+
+yhat.bag = predict(bag.drink.ad,newdata=drink.ad[-train,]) 
+plot(yhat.bag, drink.ad.test) 
+abline(0,1) 
+
+mean((yhat.bag-drink.ad.test)^2) 
+
+```
+
+Bagging reduces the error rate significantly and it is computed as 67.55 which is still high.
+
+##### Random Forest:
+
+```{r}
+set.seed(1) 
+rf.drink.ad=randomForest(Value~.,data=drink.ad,subset=train,mtry=4,importance=TRUE ) 
+yhat.rf = predict(rf.drink.ad,newdata=drink.ad[-train,]) 
+mean((yhat.rf-drink.ad.test)^2) 
+
+```
+
+Random Forest gives the same MSE as Bagging because both are equivalent in this case ( due to same value of mtry).
+
+
+##### Boosting
+
+```{r}
+require(gbm)
+set.seed(1)
+boost.drink.ad=gbm(Value~.,data=drink.ad[train,],distribution="gaussian",n.trees=5000,interaction.depth=4)
+
+summary(boost.drink.ad)
+```
+
+
+Again, we see that **Place and Ethnicity** are the most important variables as seen above. We can also produce partial dependence plots for these two variables. The plots below show marginal effect of selected variables on the response. 
+
+```{r}
+par(mfrow=c(1,2)) 
+plot(boost.drink.ad,i="Place") 
+plot(boost.drink.ad,i="Ethnicity")
+
+yhat.boost=predict(boost.drink.ad,newdata=drink.ad[-train,],n.trees=5000) 
+mean((yhat.boost-drink.ad.test)^2) 
+
+boost.drink.ad=gbm(Value~.,data=drink.ad[train,],distribution="gaussian",n.trees=5000,interaction.depth=4,shrinkage=0.2,verbose=F) 
+yhat.boost=predict(boost.drink.ad,newdata=drink.ad[-train,],n.trees=5000) 
+mean((yhat.boost-drink.ad.test)^2) 
+
+```
+
+There is no improvement in MSE when we perform Boosting. It is more than that of Bagging, 79.02 when we use default Shrinkage Parameter and 83.89 when the Shrinkage Parameter is increased to 0.2 .
+
+Therefore, we choose Regression Tree with Bagging as the best model as it generates the least MSE.
+
+##### Importance of Variables:
+
+```{r}
+importance(bag.drink.ad)
+varImpPlot(bag.drink.ad) 
+```
+
+Again, it is observed that the most important predictor is **Place** and the next best predictor is **Ethnicity**.  
+
+When we check the plots, it is clear that **San Jose** has the highest rate of binge drinking among adults and Las Vegas and Houston seem to have lower binge drinking rates.  
+
+When we check ethnicities, it can be observed that Multiracial has highest rate and Asian/PI and Black seem to have the lowest rates.
+
+#### iv) Smoking data for Adults
+
+```{r}
+require(tree)
+
+set.seed(1) 
+
+## Create the Training dataset
+
+train = sample(1:nrow(smoke.ad), nrow(smoke.ad)/2)
+tree.smoke.ad=tree(Value~.,smoke.ad,subset=train)
+summary(tree.smoke.ad)
+
+```
+  
+```{r}
+plot(tree.smoke.ad)
+text(tree.smoke.ad,pretty=0, cex = 0.6)
+tree.smoke.ad
+```
+
+We will perform Pruning on the tree now.  
+
+##### Pruning:
+
+```{r}
+cv.smoke.ad=cv.tree(tree.smoke.ad)
+plot(cv.smoke.ad$size,cv.smoke.ad$dev,type='b') 
+
+```
+
+```{r}
+prune.smoke.ad=prune.tree(tree.smoke.ad,best=8) 
+plot(prune.smoke.ad) 
+text(prune.smoke.ad,pretty=0, cex = 0.6) 
+prune.smoke.ad
+```
+
+**Interpretation:**
+
+For easier interpretation and better graphical representation, we performed tree pruning to 8 terminal nodes. The best predictor seems to be Place again because it is used for the initial split. Cities Miami, Oakland, San Antonia seem be on the lower side and cities Las Vegas, Chicago and Boston seem to be on the higher end of the smoking rates among adults. The next predictor Ethnicity has Black, Multiracial on the higher side. The tree() function has used Place, Ethnicity and Gender for building the Regression tree. 
+
+
+##### Making Predictions on test data:
+
+```{r}
+yhat=predict(tree.smoke.ad,newdata=smoke.ad[-train,]) 
+smoke.ad.test = smoke.ad[-train,"Value"] 
+plot(yhat,smoke.ad.test)
+abline(0,1)
+```
+
+##### Mean Squared Error
+
+```{r}
+
+mean((yhat-smoke.ad.test)^2) 
+
+```
+
+The error rate is quite good and we can also implement Bagging, Random Forest or Boosting to see if we can get n even better MSE.
+
+
+##### Bagging
+```{r}
+
+require(randomForest)
+set.seed(1) 
+bag.smoke.ad=randomForest(Value~.,data=smoke.ad,subset=train,mtry=4,ntree = 500, importance=TRUE) 
+bag.smoke.ad
+
+yhat.bag = predict(bag.smoke.ad,newdata=smoke.ad[-train,]) 
+plot(yhat.bag, smoke.ad.test) 
+abline(0,1) 
+
+mean((yhat.bag-smoke.ad.test)^2) 
+
+```
+
+Bagging reduces the error rate significantly and it is computed as 9.48.
+
+##### Random Forest:
+
+```{r}
+set.seed(1) 
+rf.smoke.ad=randomForest(Value~.,data=smoke.ad,subset=train,mtry=4,importance=TRUE ) 
+yhat.rf = predict(rf.smoke.ad,newdata=smoke.ad[-train,]) 
+mean((yhat.rf-smoke.ad.test)^2) 
+
+```
+
+Random Forest gives the same MSE as Bagging because both are equivalent in this case ( due to same value of mtry).
+
+
+##### Boosting
+
+```{r}
+require(gbm)
+set.seed(1)
+boost.smoke.ad=gbm(Value~.,data=smoke.ad[train,],distribution="gaussian",n.trees=5000,interaction.depth=4)
+
+summary(boost.smoke.ad)
+```
+
+
+Place and Ethnicity are the most important variables as seen above. We can also produce partial dependence plots for these two variables. The plots below show marginal effect of selected variables on the response. 
+
+```{r}
+par(mfrow=c(1,2)) 
+plot(boost.smoke.ad,i="Place", type = "l") 
+plot(boost.smoke.ad,i="Ethnicity", type = "l")
+
+yhat.boost=predict(boost.smoke.ad,newdata=smoke.ad[-train,],n.trees=5000) 
+mean((yhat.boost-smoke.ad.test)^2) 
+
+boost.smoke.ad=gbm(Value~.,data=smoke.ad[train,],distribution="gaussian",n.trees=5000,interaction.depth=4,shrinkage=0.2,verbose=F) 
+yhat.boost=predict(boost.smoke.ad,newdata=smoke.ad[-train,],n.trees=5000) 
+mean((yhat.boost-smoke.ad.test)^2) 
+
+```
+
+The MSE when we perform Boosting is more than that of Bagging, 17.29 when we use default Shrinkage Parameter and 23.42 when the Shrinkage Parameter is increased to 0.2.
+
+Therefore, we choose **Regression Tree with Bagging** as the best model as it generates the least MSE.
+
+##### Importance of Variables:
+
+```{r}
+importance(bag.smoke.ad)
+varImpPlot(bag.smoke.ad) 
+```
+
+As seen above the most important predictor is Place and the next best predictor is Ethnicity again. 
+  Looking at the plots after Boosting we can see that, the cities **Philadelphia and Denver** seem to have higher rates of smoking among adults, while the cities **Seattle and Miami** have lower smoking rates.  
+  Coming to ethnicities we have Multiracial and Native American communities with higher values; Asian/PI and Hispanic have lower values among the adult population.
+  
+  
+
+  
+### Summary of Results:
+
+Regression Tree analysis with Bagging gives us the best model for all datasets we examined - drink.st, smoke.st, drink.ad and smoke.ad.  
+
+Overall, we can conclude that **Place and Ethnicity** are the most important predictors that influence the Indicator values for Smoking and Drinking among High School students as well as Smoking and Drinking among Adults. In other words, certain cities have Values in the higher range, while others exhibit lower indicators. 
+  
+Also, some communities like Multiracial seem to have more tendency to be in the higher range of indicator values, that is, more adults and high school students in these communities seem to have smoking and binge drinking problems. Whereas, communities such as Asian/PI and Black seem to have lower indicator values. 
+  
+Therefore, we can place emphasis on the cities and communities which have high tendency for Smoking and Drinking problems and perform further analysis to examine what needs to be done in order to curb these societal problems.
+
+## 4. Additional Analyses
+
+### More Statistical Methods
+
+We tried application of statistical methods apart from the ones described above like Logistic Regression, Linear Discriminant Analysis and K Nearest Neighbors. As most of the data is categorical we have not been able to utilize these methods in an effective manner. 
+
+**i) Logistic Regression:** 
+ 
+Applied logistic Regression on the High School students and Adults    drinking problem data. As per initial analysis, there does not seem to be any effect of gender, value and Place on the disease. However, we need to investigate more to check for any significant relationships.
+
+**ii) Linear Discriminant Analysis:**
+Applied Linear Discriminant analysis on the High School students and Adults drinking problem data. Looking at posterior probability, it is clear that there is uncertainty after we have sampled data. This is planned as a future step of analysis. 
+
+**iii) KNN Classification:**
+We employed the K-Nearest Neighbors method to check if predictions can be made for the Indicator Value given the data for previous years. However, Value is a numeric variable and would need to be converted to categorical to make KNN classification work. 
+
+### Disease Indicator Analysis
+
+We also did some research and examined the dataset for significant factors influencing HIV/AIDS occurrences in major cities of the United States.
+
+```{r}
+require(dplyr)
+health_atlanta <- health.data %>%
+  filter(Place == "Atlanta (Fulton County), GA")
+
+health_atlanta_hiv <- health_atlanta %>%
+  filter(Indicator.Category == "HIV/AIDS")
+
+lm.fit_at_hiv <- lm(Value~Year, data=health_atlanta_hiv)
+summary(lm.fit_at_hiv)
+
+pairs(health_atlanta_hiv)
+```
+
+```{r eval=FALSE}
+
+dataset<-health.data %>%
+  filter(Year == 2013)%>%
+  filter(Gender=="Both")%>%
+  filter(Place == "Atlanta (Fulton County), GA")
+
+lm.fit=lm(Value~Race..Ethnicity,data=dataset) 
+summary(lm.fit)
+
+AIDS_mort_rate <- health.data %>%
+  filter(Indicator == "HIV-Related Mortality Rate (Age-Adjusted; Per 100,000 people)")
+
+pairs(AIDS_mort_rate)
+
+lm.fit=lm(Value~Year,data=AIDS_mort_rate) 
+summary(lm.fit)
+
+lm.fit=lm(Value~Gender,data=AIDS_mort_rate) 
+summary(lm.fit)
+
+lm.fit=lm(Value~Race..Ethnicity,data=AIDS_mort_rate) 
+summary(lm.fit)
+
+lm.fit=lm(Value~Place,data=AIDS_mort_rate) 
+summary(lm.fit)
+
+```
+
+
+## 5. Future Research
+
+**Analyze using more predictors:**
+We have performed our analysis based on four variables which we feel are the most influential based on our Questions of Interest. All the remaining variables in our Original dataset (Health.Data) have not been considered as they are either not significant logistically or they have not been collected in a format that can be utilized for statistical analysis.  
+Therefore, future research can be performed by processing these data columns and including these as explanatory variables in Linear Regression and Regression Tree analysis. Examples of these columns include Age( age of the people on whom the study has been conducted) and Methods (the methods used to obtain the Value).   
+
+**Perform analysis on disease indicators:**
+Our original dataset includes diagnosis rate, mortality rate and incidence rate indicators for various diseases such as HIV/AIDS, Cancer,Heart Disease in the most urban cities of the United States. Our intention is to further explore the data and examine the various dependencies and influencing factors that can lead to these conditions. This can be a good case for future research as well.
+
+## 6. References
+
+[1] https://data.world/health/big-cities-health
+  
+[2] http://faculty.marshall.usc.edu/gareth-james/ISL/
+
+
